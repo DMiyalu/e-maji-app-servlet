@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URL
@@ -85,27 +86,42 @@ class MySmsReceiver : BroadcastReceiver() {
                                         while (inp.readLine().also { line = it } != null) {
                                             // println(line)
                                             response = line.toString();
-                                            Log.d("Response: ", response);
-                                        }
-                                    }
-                                }
 
-                                    if (response.contains("SMSSendDto")) {
-                                        if (Build.VERSION.SDK_INT >=
-                                            Build.VERSION_CODES.M) {
-                                            val smsManager = SmsManager.getDefault()
-                                            smsManager.sendTextMessage(phoneNumber, null, "open", null, null)
-                                            Log.d("send sms status", "sent: $response");
-                                        } else {
-                                            val smsManager = SmsManager.getDefault()
-                                            smsManager.sendTextMessage(phoneNumber, null, "open", null, null)
-                                            Log.d("send sms status", "sent: $response");
+                                            val userObject = JSONObject(response);
+                                            Log.d("Response: ", response);
+                                            Log.d("userObject: ", userObject.toString());
+                                            Log.d("userObject: ", userObject["message"].toString());
+
+
+
+                                            // Send SMS
+                                            if (response.contains("SMSSendDto")) {
+                                                if (Build.VERSION.SDK_INT >=
+                                                    Build.VERSION_CODES.M) {
+                                                    val smsManager = SmsManager.getDefault()
+
+                                                    val smsContent = response.substring(1, 10);
+                                                    Log.d("sms content", smsContent);
+                                                    smsManager.sendTextMessage(phoneNumber, null, userObject["message"].toString(), null, null)
+                                                    Log.d("send sms status", "sent: $smsContent");
+                                                } else {
+                                                    val smsManager = SmsManager.getDefault()
+                                                    Log.d("sms content", response);
+                                                    smsManager.sendTextMessage(phoneNumber, null, userObject["message"].toString(), null, null)
+                                                    Log.d("send sms status", "sent: $response");
+                                                }
+                                            } else {
+                                                val smsManager = SmsManager.getDefault()
+                                                smsManager.sendTextMessage(phoneNumber, null, "close", null, null)
+                                                Log.d("send sms status", "sent: open");
+                                            }
                                         }
-                                    } else {
-                                        val smsManager = SmsManager.getDefault()
-                                        smsManager.sendTextMessage(phoneNumber, null, "open", null, null)
-                                        Log.d("send sms status", "sent: open");
+                                        }
                                     }
+
+
+
+
 
 
                                 // val result = onSendHttpRequest(postData);
@@ -133,11 +149,12 @@ class MySmsReceiver : BroadcastReceiver() {
                                 val smsContent = msgs[i]!!.getMessageBody().toString();
                                 val encodedString = Base64.getEncoder().encodeToString(smsContent.toByteArray());
 
-                                    var response = "";
-                                    val baseUrl = "https://eppt.graciasgroup.com/api/sms/send/base64?phone_number=${phoneNumber}&message=${encodedString}"
-                                    val url = URL(baseUrl)
-                                    val connection = url.openConnection()
+                                var response = "";
+                                val baseUrl = "https://eppt.graciasgroup.com/api/sms/send/base64?phone_number=${phoneNumber}&message=${encodedString}"
+                                val url = URL(baseUrl)
+                                val connection = url.openConnection()
 
+                                GlobalScope.launch {
                                     BufferedReader(InputStreamReader(connection.getInputStream())).use { inp ->
                                         var line: String?
                                         while (inp.readLine().also { line = it } != null) {
@@ -147,6 +164,7 @@ class MySmsReceiver : BroadcastReceiver() {
                                         }
                                     }
 
+                                    // Send SMS
                                     if (response.contains("SMSSendDto")) {
                                         val smsManager = SmsManager.getDefault()
                                         smsManager.sendTextMessage("+243810994698", null, response, null, null)
@@ -154,8 +172,9 @@ class MySmsReceiver : BroadcastReceiver() {
                                     } else {
                                         val smsManager = SmsManager.getDefault()
                                         smsManager.sendTextMessage("+243810994698", null, "close", null, null)
-                                        Log.d("send sms status", "sent: close");
+                                        Log.d("send sms status", "sent: $response ");
                                     }
+                                }
                             }
                         }
                     }

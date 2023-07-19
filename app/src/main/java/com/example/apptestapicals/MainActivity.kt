@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("onClik button", "button clicked");
 
-           /*
+
                 try {
                     GlobalScope.launch {
                         Log.d("on send sms", "on send sms");
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d("error", e.toString());
                 }
 
-            */
+
 
 
 
